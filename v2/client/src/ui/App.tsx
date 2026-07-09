@@ -3,6 +3,7 @@ import { useAppStore } from "../store"
 import { Header } from "./components/Header"
 import { UploadZone } from "./components/UploadZone"
 import { LogPanel } from "./components/LogPanel"
+import { Toast } from "./components/Toast"
 
 export function App() {
   const darkMode = useAppStore((s) => s.darkMode)
@@ -15,6 +16,7 @@ export function App() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-200">
       <Header />
+      <Toast />
       {activeView === "analysis" ? (
         <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
           <section className="text-center py-8 px-4">

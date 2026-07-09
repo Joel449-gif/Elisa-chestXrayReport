@@ -5,7 +5,8 @@ import { uploadAndPredict } from "../../api"
 export function UploadZone() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
-  const { upload, setUpload, addPrediction, addLog } = useAppStore()
+  const { upload, setUpload, addPrediction, addLog, setNotification } =
+    useAppStore()
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -50,6 +51,10 @@ export function UploadZone() {
       })
 
       setUpload({ status: "done" })
+      setNotification({
+        message: `Prediction complete for ${res.filename} (${res.processingTimeMs}ms)`,
+        type: "success",
+      })
       addLog({
         message: `Prediction complete (${res.processingTimeMs}ms)`,
         severity: "success",
@@ -59,6 +64,7 @@ export function UploadZone() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error"
       setUpload({ status: "error", error: msg })
+      setNotification({ message: msg, type: "error" })
       addLog({
         message: `Error: ${msg}`,
         severity: "error",

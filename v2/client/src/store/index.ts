@@ -22,6 +22,11 @@ export interface PredictionItem {
 
 export type ViewTab = "analysis" | "log"
 
+export interface Notification {
+  message: string
+  type: "success" | "error"
+}
+
 interface AppState {
   upload: UploadState
   setUpload: (upload: Partial<UploadState>) => void
@@ -38,6 +43,9 @@ interface AppState {
 
   activeView: ViewTab
   setActiveView: (view: ViewTab) => void
+
+  notification: Notification | null
+  setNotification: (n: Notification | null) => void
 
   logs: LogEntry[]
   addLog: (entry: Omit<LogEntry, "id" | "timestamp">) => void
@@ -62,6 +70,9 @@ export const useAppStore = create<AppState>((set) => ({
 
   activeView: "analysis",
   setActiveView: (view) => set({ activeView: view }),
+
+  notification: null,
+  setNotification: (n) => set({ notification: n }),
 
   logs: [],
   addLog: (entry) =>
