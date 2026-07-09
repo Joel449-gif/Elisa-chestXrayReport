@@ -1,9 +1,0 @@
-{
-  "buildCommand": "cd client && npm ci && npm run build",
-  "outputDirectory": "client/dist",
-  "installCommand": "",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
