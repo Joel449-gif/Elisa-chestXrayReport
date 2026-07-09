@@ -7,6 +7,8 @@ export interface LogEntry {
   timestamp: number
   message: string
   severity: "info" | "success" | "warning" | "error"
+  filename?: string
+  pathologies?: Pathology[]
 }
 
 export interface PredictionItem {
@@ -17,6 +19,8 @@ export interface PredictionItem {
   rawLogits: number[]
   timestamp: number
 }
+
+export type ViewTab = "analysis" | "log"
 
 interface AppState {
   upload: UploadState
@@ -32,11 +36,12 @@ interface AppState {
   darkMode: boolean
   toggleDarkMode: () => void
 
+  activeView: ViewTab
+  setActiveView: (view: ViewTab) => void
+
   logs: LogEntry[]
   addLog: (entry: Omit<LogEntry, "id" | "timestamp">) => void
   clearLogs: () => void
-  showLogs: boolean
-  toggleLogs: () => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -55,6 +60,9 @@ export const useAppStore = create<AppState>((set) => ({
   darkMode: true,
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
 
+  activeView: "analysis",
+  setActiveView: (view) => set({ activeView: view }),
+
   logs: [],
   addLog: (entry) =>
     set((state) => ({
@@ -64,6 +72,4 @@ export const useAppStore = create<AppState>((set) => ({
       ],
     })),
   clearLogs: () => set({ logs: [] }),
-  showLogs: false,
-  toggleLogs: () => set((state) => ({ showLogs: !state.showLogs })),
 }))

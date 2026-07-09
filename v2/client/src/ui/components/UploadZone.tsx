@@ -9,41 +9,61 @@ export function UploadZone() {
 
   const handleFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      addLog({ message: `Invalid file type: ${file.type}`, severity: "warning" })
+      addLog({
+        message: `Invalid file type: ${file.type}`,
+        severity: "warning",
+        filename: file.name,
+      })
       return
     }
 
     const previewUrl = URL.createObjectURL(file)
     setUpload({ status: "uploading", filename: file.name, previewUrl })
-    addLog({ message: `Uploading ${file.name}...`, severity: "info" })
+    addLog({
+      message: "Uploading...",
+      severity: "info",
+      filename: file.name,
+    })
 
     try {
       setUpload({ status: "processing" })
-      addLog({ message: "Sending to inference server...", severity: "info" })
+      addLog({
+        message: "Sending to inference server...",
+        severity: "info",
+        filename: file.name,
+      })
       const res = await uploadAndPredict(file)
+
+      const pathologies = res.predictions.map((p) => ({
+        name: p.name,
+        probability: p.probability,
+        opPoint: p.opPoint,
+      }))
 
       addPrediction({
         id: crypto.randomUUID(),
         filename: res.filename,
         previewUrl,
-        pathologies: res.predictions.map((p) => ({
-          name: p.name,
-          probability: p.probability,
-          opPoint: p.opPoint,
-        })),
+        pathologies,
         rawLogits: res.predictions.map((p) => p.probability),
         timestamp: Date.now(),
       })
 
       setUpload({ status: "done" })
       addLog({
-        message: `Prediction complete: ${res.filename} (${res.processingTimeMs}ms)`,
+        message: `Prediction complete (${res.processingTimeMs}ms)`,
         severity: "success",
+        filename: res.filename,
+        pathologies,
       })
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error"
       setUpload({ status: "error", error: msg })
-      addLog({ message: `Error: ${msg}`, severity: "error" })
+      addLog({
+        message: `Error: ${msg}`,
+        severity: "error",
+        filename: file.name,
+      })
     }
   }
 
@@ -108,7 +128,9 @@ export function UploadZone() {
               {isBusy ? (
                 <span className="flex items-center gap-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                  {upload.status === "uploading" ? "Uploading..." : "Processing..."}
+                  {upload.status === "uploading"
+                    ? "Uploading..."
+                    : "Processing..."}
                 </span>
               ) : (
                 <>
