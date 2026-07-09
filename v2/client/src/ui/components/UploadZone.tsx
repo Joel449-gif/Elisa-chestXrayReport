@@ -1,19 +1,25 @@
-import { useRef, type ChangeEvent } from "react"
+import { useRef, useState, type ChangeEvent, type DragEvent } from "react"
 import { useAppStore } from "../../store"
 import { uploadAndPredict } from "../../api"
 
 export function UploadZone() {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { upload, setUpload, addPrediction } = useAppStore()
+  const [dragging, setDragging] = useState(false)
+  const { upload, setUpload, addPrediction, addLog } = useAppStore()
 
   const handleFile = async (file: File) => {
-    if (!file.type.startsWith("image/")) return
+    if (!file.type.startsWith("image/")) {
+      addLog({ message: `Invalid file type: ${file.type}`, severity: "warning" })
+      return
+    }
 
     const previewUrl = URL.createObjectURL(file)
     setUpload({ status: "uploading", filename: file.name, previewUrl })
+    addLog({ message: `Uploading ${file.name}...`, severity: "info" })
 
     try {
       setUpload({ status: "processing" })
+      addLog({ message: "Sending to inference server...", severity: "info" })
       const res = await uploadAndPredict(file)
 
       addPrediction({
@@ -30,11 +36,14 @@ export function UploadZone() {
       })
 
       setUpload({ status: "done" })
-    } catch (err) {
-      setUpload({
-        status: "error",
-        error: err instanceof Error ? err.message : "Unknown error",
+      addLog({
+        message: `Prediction complete: ${res.filename} (${res.processingTimeMs}ms)`,
+        severity: "success",
       })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error"
+      setUpload({ status: "error", error: msg })
+      addLog({ message: `Error: ${msg}`, severity: "error" })
     }
   }
 
@@ -43,38 +52,92 @@ export function UploadZone() {
     if (file) handleFile(file)
   }
 
-  return (
-    <div className="flex flex-col items-center gap-4 p-8">
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        onChange={onChange}
-        className="hidden"
-      />
+  const onDragOver = (e: DragEvent) => {
+    e.preventDefault()
+    setDragging(true)
+  }
 
-      <button
+  const onDragLeave = () => setDragging(false)
+
+  const onDrop = (e: DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleFile(file)
+  }
+
+  const isBusy = upload.status === "processing" || upload.status === "uploading"
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
-        disabled={upload.status === "processing" || upload.status === "uploading"}
-        className="px-6 py-3 rounded-lg bg-[#0E46A3] text-white font-semibold
-                   hover:bg-[#0A3578] disabled:opacity-50 transition-colors"
+        className={`w-full max-w-xl cursor-pointer rounded-2xl border-2 border-dashed p-12 text-center transition-all ${
+          dragging
+            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 scale-[1.02]"
+            : "border-gray-300 dark:border-gray-700 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-gray-50 dark:hover:bg-gray-900/50"
+        } ${isBusy ? "pointer-events-none opacity-60" : ""}`}
       >
-        {upload.status === "uploading"
-          ? "Uploading..."
-          : upload.status === "processing"
-            ? "Processing..."
-            : "Upload Chest X-Ray"}
-      </button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          onChange={onChange}
+          className="hidden"
+        />
+
+        <div className="flex flex-col items-center gap-3">
+          <svg
+            className="w-12 h-12 text-gray-400 dark:text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <div>
+            <p className="text-base font-medium text-gray-700 dark:text-gray-300">
+              {isBusy ? (
+                <span className="flex items-center gap-2">
+                  <span className="inline-block w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                  {upload.status === "uploading" ? "Uploading..." : "Processing..."}
+                </span>
+              ) : (
+                <>
+                  Drop your chest X-ray here
+                  <br />
+                  <span className="text-sm font-normal text-gray-500 dark:text-gray-500">
+                    or click to browse
+                  </span>
+                </>
+              )}
+            </p>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-600">
+            PNG, JPG, DICOM &mdash; 224&times;224 recommended
+          </p>
+        </div>
+      </div>
 
       {upload.error && (
-        <p className="text-red-600 text-sm">Error: {upload.error}</p>
+        <div className="px-4 py-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm">
+          {upload.error}
+        </div>
       )}
 
       {upload.previewUrl && (
         <img
           src={upload.previewUrl}
           alt="Preview"
-          className="max-h-64 rounded shadow-md"
+          className="max-h-64 rounded-xl shadow-lg dark:shadow-gray-900"
         />
       )}
     </div>

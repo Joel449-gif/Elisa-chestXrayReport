@@ -2,6 +2,13 @@ import { create } from "zustand"
 import type { UploadState, InferenceMode } from "../types"
 import type { Pathology } from "../types"
 
+export interface LogEntry {
+  id: string
+  timestamp: number
+  message: string
+  severity: "info" | "success" | "warning" | "error"
+}
+
 export interface PredictionItem {
   id: string
   filename: string
@@ -12,41 +19,51 @@ export interface PredictionItem {
 }
 
 interface AppState {
-  /* upload */
   upload: UploadState
   setUpload: (upload: Partial<UploadState>) => void
 
-  /* predictions */
   predictions: PredictionItem[]
   addPrediction: (pred: PredictionItem) => void
   clearPredictions: () => void
 
-  /* settings */
   inferenceMode: InferenceMode
   setInferenceMode: (mode: InferenceMode) => void
 
-  /* ui */
   darkMode: boolean
   toggleDarkMode: () => void
+
+  logs: LogEntry[]
+  addLog: (entry: Omit<LogEntry, "id" | "timestamp">) => void
+  clearLogs: () => void
+  showLogs: boolean
+  toggleLogs: () => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  /* upload */
   upload: { status: "idle", filename: null, previewUrl: null },
   setUpload: (partial) =>
     set((state) => ({ upload: { ...state.upload, ...partial } })),
 
-  /* predictions */
   predictions: [],
   addPrediction: (pred) =>
     set((state) => ({ predictions: [pred, ...state.predictions] })),
   clearPredictions: () => set({ predictions: [] }),
 
-  /* settings */
   inferenceMode: "server",
   setInferenceMode: (mode) => set({ inferenceMode: mode }),
 
-  /* ui */
-  darkMode: false,
+  darkMode: true,
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+
+  logs: [],
+  addLog: (entry) =>
+    set((state) => ({
+      logs: [
+        { ...entry, id: crypto.randomUUID(), timestamp: Date.now() },
+        ...state.logs,
+      ],
+    })),
+  clearLogs: () => set({ logs: [] }),
+  showLogs: false,
+  toggleLogs: () => set((state) => ({ showLogs: !state.showLogs })),
 }))

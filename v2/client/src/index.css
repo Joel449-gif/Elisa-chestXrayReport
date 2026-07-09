@@ -1,16 +1,11 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  --color-primary: #0e46a3;
-  --color-accent: #e1f7f5;
-  --color-warm-bg: #f1eedc;
-  --color-warm-text: #af8260;
-  --color-danger: #c12e2a;
-  --color-healthy: #8deca4;
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 body {
-  font-family: "Cambria", "Cochin", "Georgia", serif;
-  background-color: var(--color-warm-bg);
-  color: var(--color-warm-text);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
 }

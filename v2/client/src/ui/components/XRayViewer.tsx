@@ -64,8 +64,8 @@ export function XRayViewer({
   }, [saliencyMap, saliencyWidth, saliencyHeight])
 
   return (
-    <div className="relative inline-block">
-      <canvas ref={canvasRef} className="max-h-[600px] rounded shadow" />
+    <div className="relative inline-block rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+      <canvas ref={canvasRef} className="max-h-[600px]" />
       <canvas
         ref={overlayRef}
         className="absolute inset-0 pointer-events-none mix-blend-multiply"
