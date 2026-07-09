@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd client && npm ci && npm run build",
+  "outputDirectory": "client/dist",
+  "installCommand": "",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/index.py": { "runtime": "vercel-python@3.12.0", "maxDuration": 10 }
+  }
+}
