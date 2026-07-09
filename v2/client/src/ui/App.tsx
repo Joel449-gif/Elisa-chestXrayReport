@@ -4,6 +4,7 @@ import { Header } from "./components/Header"
 import { UploadZone } from "./components/UploadZone"
 import { LogPanel } from "./components/LogPanel"
 import { Toast } from "./components/Toast"
+import { ResultPanel } from "./components/ResultPanel"
 
 export function App() {
   const darkMode = useAppStore((s) => s.darkMode)
@@ -46,6 +47,7 @@ export function App() {
           </section>
 
           <UploadZone />
+          <ResultPanel />
         </main>
       ) : (
         <LogPanel />
