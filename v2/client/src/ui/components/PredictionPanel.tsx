@@ -1,14 +1,54 @@
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useAppStore } from "../../store"
 import { XRayViewer } from "./XRayViewer"
 import { RiskBar } from "./RiskBar"
 
+function mockSaliencyMap(
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+): Float32Array {
+  const map = new Float32Array(width * height)
+  const sigma = Math.min(width, height) * 0.2
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const dx = x - centerX
+      const dy = y - centerY
+      map[y * width + x] = Math.exp(-(dx * dx + dy * dy) / (2 * sigma * sigma))
+    }
+  }
+  return map
+}
+
+interface SaliencyState {
+  map: Float32Array
+  width: number
+  height: number
+}
+
 export function PredictionPanel() {
   const { predictions, clearPredictions } = useAppStore()
-  const [_activeSaliency, _setActiveSaliency] = useState<{
-    predId: string
-    pathologyIndex: number
-  } | null>(null)
+  const [saliency, setSaliency] = useState<SaliencyState | null>(null)
+
+  const handleExplain = useCallback(
+    (predId: string, pathologyIndex: number) => {
+      const pred = predictions.find((p) => p.id === predId)
+      if (!pred) return
+
+      const img = new Image()
+      img.onload = () => {
+        const w = Math.min(img.width, 224)
+        const h = Math.min(img.height, 224)
+        const cx = 70 + (pathologyIndex * 17) % (w - 140)
+        const cy = 70 + (pathologyIndex * 23) % (h - 140)
+        const map = mockSaliencyMap(w, h, cx, cy)
+        setSaliency({ map, width: w, height: h })
+      }
+      img.src = pred.previewUrl
+    },
+    [predictions],
+  )
 
   if (predictions.length === 0) return null
 
@@ -16,7 +56,10 @@ export function PredictionPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">
-          Predictions <span className="text-sm font-normal text-gray-500">({predictions.length})</span>
+          Predictions{" "}
+          <span className="text-sm font-normal text-gray-500">
+            ({predictions.length})
+          </span>
         </h2>
         <button
           onClick={clearPredictions}
@@ -42,7 +85,12 @@ export function PredictionPanel() {
 
           <div className="flex flex-col md:flex-row gap-6 p-5">
             <div className="flex-1 flex justify-center">
-              <XRayViewer src={pred.previewUrl} />
+              <XRayViewer
+                src={pred.previewUrl}
+                saliencyMap={saliency?.map ?? null}
+                saliencyWidth={saliency?.width}
+                saliencyHeight={saliency?.height}
+              />
             </div>
 
             <div className="w-full md:w-72 space-y-1">
@@ -56,12 +104,7 @@ export function PredictionPanel() {
                   key={p.name}
                   pathology={p}
                   showExplain
-                  onExplain={() =>
-                    _setActiveSaliency({
-                      predId: pred.id,
-                      pathologyIndex: idx,
-                    })
-                  }
+                  onExplain={() => handleExplain(pred.id, idx)}
                 />
               ))}
             </div>

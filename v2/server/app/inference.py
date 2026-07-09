@@ -32,9 +32,15 @@ def predict(image: Image.Image) -> list[PathologyResult]:
     resized = grey.resize((224, 224), Image.BILINEAR)
     pixels = np.array(resized, dtype=np.float32) / 255.0
 
-    # Mock: generate random logits
+    # Mock: generate low logits (simulating a mostly-healthy X-ray),
+    # with a few randomly elevated to simulate realistic findings.
     np.random.seed(hash(str(pixels.tobytes())) % (2**31))
-    logits = np.random.uniform(0, 1, size=len(CLASSIFIER_OP_POINTS)).tolist()
+    n = len(CLASSIFIER_OP_POINTS)
+    logits = np.random.normal(loc=0.02, scale=0.04, size=n).tolist()
+    # Randomly elevate 1-2 pathologies to show something
+    elevate = np.random.choice(n, size=max(1, min(2, n)), replace=False)
+    for idx in elevate:
+        logits[idx] = np.random.uniform(0.08, 0.35)
 
     results: list[PathologyResult] = []
     for i, label in enumerate(CLASSIFIER_LABELS):
