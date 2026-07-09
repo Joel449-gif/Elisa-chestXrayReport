@@ -2,7 +2,6 @@ import { useEffect } from "react"
 import { useAppStore } from "../store"
 import { Header } from "./components/Header"
 import { UploadZone } from "./components/UploadZone"
-import { PredictionPanel } from "./components/PredictionPanel"
 import { LogPanel } from "./components/LogPanel"
 
 export function App() {
@@ -45,7 +44,6 @@ export function App() {
           </section>
 
           <UploadZone />
-          <PredictionPanel />
         </main>
       ) : (
         <LogPanel />
