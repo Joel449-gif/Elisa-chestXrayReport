@@ -11,6 +11,12 @@ export interface LogEntry {
   pathologies?: Pathology[]
 }
 
+export interface SaliencyStore {
+  map: number[]
+  width: number
+  height: number
+}
+
 export interface PredictionItem {
   id: string
   filename: string
@@ -18,6 +24,7 @@ export interface PredictionItem {
   pathologies: Pathology[]
   rawLogits: number[]
   timestamp: number
+  saliency?: SaliencyStore | null
 }
 
 export type ViewTab = "analysis" | "log"

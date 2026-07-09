@@ -48,6 +48,7 @@ export function UploadZone() {
         pathologies,
         rawLogits: res.predictions.map((p) => p.probability),
         timestamp: Date.now(),
+        saliency: res.saliency || null,
       })
 
       setUpload({ status: "done" })

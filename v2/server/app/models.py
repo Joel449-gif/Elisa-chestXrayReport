@@ -7,11 +7,18 @@ class PathologyPrediction(BaseModel):
     op_point: float
 
 
+class SaliencyMap(BaseModel):
+    map: list[float]
+    width: int
+    height: int
+
+
 class PredictResponse(BaseModel):
     filename: str
     size: tuple[int, int]
     predictions: list[PathologyPrediction]
     processing_time_ms: float | None = None
+    saliency: SaliencyMap | None = None
 
 
 class HealthResponse(BaseModel):

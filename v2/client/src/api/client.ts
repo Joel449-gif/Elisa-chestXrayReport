@@ -1,5 +1,11 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api"
 
+export interface SaliencyData {
+  map: number[]
+  width: number
+  height: number
+}
+
 export interface PredictResponse {
   filename: string
   size: [number, number]
@@ -9,6 +15,7 @@ export interface PredictResponse {
     opPoint: number
   }>
   processingTimeMs?: number
+  saliency?: SaliencyData | null
 }
 
 export async function uploadAndPredict(
